@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SİNYAL">
+<meta name="theme-color" content="#03180f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>SİNYAL · EEF205E Lojik Çalışma Oyunu</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<svg id="bg" aria-hidden="true"></svg>
+<header id="top">
+  <div class="brand" id="brand"><span class="chipicon"></span>SİNYAL<small>EEF205E</small></div>
+  <div class="xp">
+    <div class="lvl"></div>
+    <div class="bar"><i></i></div>
+  </div>
+  <nav>
+    <button id="bReview" class="btn" title="Zamanı gelen tekrar kartları">↺<span class="lbl"> Tekrar</span> <b class="cnt"></b></button>
+    <button id="bMist" class="btn" title="Yanlış yaptığın sorular ve nedenleri">📕<span class="lbl"> Hata Defteri</span> <b class="cnt"></b></button>
+    <button id="bSound" class="btn ghost" title="Ses aç/kapa">🔊</button>
+  </nav>
+</header>
+<main id="main"></main>
+<footer><button id="bReset" class="btn ghost sm">İlerlemeyi sıfırla</button> <span class="silk">Slaytlar: Lecture 1–5 · Doç. Dr. A. C. Erten</span></footer>
+
+<script src="js/core.js"></script>
+<script src="js/r1.js"></script>
+<script src="js/app.js"></script>
+<script src="js/touch.js"></script>
+</body>
+</html>
