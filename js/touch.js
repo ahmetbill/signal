@@ -29,13 +29,20 @@ const Touch = (() => {
   const kp = document.createElement('div');
   kp.id = 'kp';
   const key = (k, label, cls = '') => `<button data-k="${k}" class="${cls}">${label}</button>`;
-  kp.innerHTML = `<div class="r">${[...'1234567890'].map(c => key(c, c)).join('')}${key('bs', '⌫', 'fn')}</div>
+  const DEF = `<div class="r">${[...'1234567890'].map(c => key(c, c)).join('')}${key('bs', '⌫', 'fn')}</div>
     <div class="r">${key('kb', '⌨', 'fn sm')}${[...'ABCDEF'].map(c => key(c, c, 'hx')).join('')}${key('.', '.')}${key(' ', '␣', 'fn')}${key('ent', '⏎', 'ent')}${key('hide', '▾', 'fn sm')}</div>`;
+  /** data-keys="ABC'+()01" → özel düzen (Boolean ifade, QM deseni …) */
+  const custom = ks => `<div class="r">${[...ks].map(c => key(c, c === "'" ? '′' : c, /[A-Za-z]/.test(c) ? 'hx' : '')).join('')}${key('bs', '⌫', 'fn')}</div>
+    <div class="r">${key('kb', '⌨', 'fn sm')}${key('←', '◀', 'fn sm')}${key('→', '▶', 'fn sm')}${key(' ', '␣', 'fn')}${key('ent', '⏎', 'ent')}${key('hide', '▾', 'fn sm')}</div>`;
+  kp.innerHTML = DEF;
+  let layout = '';
   document.body.appendChild(kp);
   let cur = null;
 
   function show(inp) {
     cur = inp;
+    const want = inp.dataset.keys || '';
+    if (want !== layout) { layout = want; kp.innerHTML = want ? custom(want) : DEF; }
     document.body.classList.add('kp-on');
     requestAnimationFrame(() => {
       const r = inp.getBoundingClientRect(), top = kp.getBoundingClientRect().top, head = $('#top').getBoundingClientRect().bottom;
@@ -56,6 +63,7 @@ const Touch = (() => {
       return;
     }
     if (k === 'hide') { inp.blur(); return; }
+    if (k === '←' || k === '→') { const p = Math.max(0, Math.min(inp.value.length, s + (k === '→' ? 1 : -1))); inp.setSelectionRange(p, p); return; }
     if (k === 'kb') { setKeypad(false); inp.blur(); inp.focus(); return; }
     if (k === 'bs') { if (s !== e) inp.setRangeText('', s, e, 'end'); else if (s > 0) inp.setRangeText('', s - 1, s, 'end'); else return; }
     else inp.setRangeText(k, s, e, 'end');

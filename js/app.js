@@ -6,9 +6,7 @@
 
 /** Henüz yapılmamış bölgeler (haritada plan olarak görünür) */
 const FUTURE = [
-  { chip: 'U2', name: 'Teorem Ormanı', lec: 'Lecture 2', plan: ['AND · OR · NOT & doğruluk tablosu', 'Aksiyomlar & öncelik', 'Teoremler (absorption, De Morgan…)', 'İspat Merdiveni', 'Sadeleştirme', 'Fonksiyonun tümleyeni'] },
-  { chip: 'U3', name: 'Kanonik Kale', lec: 'Lecture 3', plan: ['Minterm & maxterm', 'İndeks gösterimi', 'Σm ve ΠM', 'SOP ↔ POS dönüşümü', 'Tümleyen fonksiyon', 'Kapılar & devre'] },
-  { chip: 'U4', name: 'Harita Vadisi', lec: 'Lecture 4–5', plan: ['Maliyet: L · G · GN', 'K-map 2-3-4 değişken', 'Prime & essential implicant', "Don't care", 'POS K-map', 'Quine-McCluskey', 'XOR & NAND/NOR'] },
+  { chip: 'U5', name: 'MSI Fabrikası', lec: 'Lecture 6–7', plan: ['Decoder', 'Encoder', 'Multiplexer', 'Toplayıcılar', '(slaytlar gelince eklenecek)'] },
 ];
 
 const App = {
@@ -32,12 +30,8 @@ const App = {
 };
 
 /* ---------- Durum yardımcıları ---------- */
-function regionOpen(r) {
-  const i = Registry.regions.indexOf(r);
-  if (i <= 0) return true;
-  const p = Registry.regions[i - 1];
-  return !!Store.s.boss[p.id] || p.stations.every(s => Store.s.done[s.id]);
-}
+/** Her bölge (ders) baştan açık: istediğin lecture'dan başlayabilirsin. Bölge içinde sıra önerilir. */
+function regionOpen() { return true; }
 function stationStatus(st) {
   if (Store.s.done[st.id]) return 'done';
   if (st.index === 0) return regionOpen(st.region) ? 'open' : 'locked';

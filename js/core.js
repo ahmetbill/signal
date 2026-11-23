@@ -181,12 +181,12 @@ function bitBoard(host, n, { value = 0, onChange, weights, labels } = {}) {
    ===================================================================== */
 
 /** Tek kutulu cevap */
-function inputTask({ q, qText, answer, answerHtml, check, why, hint, placeholder = '', after = '' }) {
+function inputTask({ q, qText, answer, answerHtml, check, why, hint, placeholder = '', after = '', keys = '' }) {
   return {
     q: qText || stripTags(q),
     render(box, done) {
       box.innerHTML = `<div class="q">${q}</div>
-        <div class="row"><input class="ans" placeholder="${esc(placeholder)}" autocomplete="off" spellcheck="false">${after}
+        <div class="row"><input class="ans" placeholder="${esc(placeholder)}"${keys ? ` data-keys="${esc(keys)}"` : ''} autocomplete="off" spellcheck="false">${after}
         <button class="btn primary chk">Kontrol ⏎</button>${hint ? '<button class="btn ghost hintb">💡 İpucu</button>' : ''}</div>
         <div class="hintbox"></div>`;
       const inp = $('input', box);
@@ -201,6 +201,7 @@ function inputTask({ q, qText, answer, answerHtml, check, why, hint, placeholder
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); submit(); } });
       $('.chk', box).onclick = submit;
       if (hint) $('.hintb', box).onclick = () => { hinted = true; $('.hintbox', box).innerHTML = '💡 ' + hint; inp.focus(); };
+      box._auto = () => { inp.value = String(answer); submit(); };
     },
   };
 }
@@ -235,6 +236,7 @@ function choiceTask({ q, qText, options, correct, multi = false, why, mono = fal
         btns.forEach(b => b.onclick = () => { const i = +b.dataset.i; sel.has(i) ? sel.delete(i) : sel.add(i); b.classList.toggle('sel'); Sound.tick(); });
         $('.chk', box).onclick = () => finish(sel);
       }
+      box._auto = () => finish(new Set(corr));
     },
   };
 }
@@ -258,7 +260,7 @@ function stepTask({ q, qText, rows, answer, why, xp = 15 }) {
         const el = document.createElement('div'); el.className = 'step active';
         const line = r.html.replace(/\[\[(\d+)\]\]/g, (_, k) => {
           const f = r.fields[+k];
-          return `<input class="fld" data-k="${k}" style="width:${(f.w || 4) + 2.2}ch" placeholder="${esc(f.ph || '')}" autocomplete="off" spellcheck="false">`;
+          return `<input class="fld" data-k="${k}"${f.keys ? ` data-keys="${esc(f.keys)}"` : ''} style="width:${(f.w || 4) + 2.2}ch" placeholder="${esc(f.ph || '')}" autocomplete="off" spellcheck="false">`;
         });
         el.innerHTML = `<div class="step-n">${idx + 1}</div><div class="step-body">
             <div class="step-line">${line}${r.choice ? '' : ' <button class="btn primary sm chk">✓</button>'}</div>
@@ -310,6 +312,13 @@ function stepTask({ q, qText, rows, answer, why, xp = 15 }) {
         }
       };
       next();
+      box._auto = () => {
+        for (let g = 0; g < 60 && idx < rows.length; g++) {
+          const el = $('.step.active', wrap), r = rows[idx];
+          if (r.choice) $$('.choice', el)[r.choice.correct].click();
+          else { $$('.fld', el).forEach(inp => { const f = r.fields[+inp.dataset.k]; inp.value = f.show ?? f.answer; }); $('.chk', el).click(); }
+        }
+      };
     },
   };
 }

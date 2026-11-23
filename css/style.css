@@ -335,3 +335,28 @@ body.kp-on footer { display: none; }
 .picklist input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--led); vertical-align: middle; }
 .pickbar { position: sticky; bottom: 0; background: var(--board); padding: 8px 0; margin-bottom: 0; }
 .ptitle .fin { margin-left: 10px; }
+
+/* Boolean: K-map, doğruluk tablosu, QM */
+table.kmap { border-collapse: separate; border-spacing: 4px; font-family: var(--mono); margin: 10px 0; }
+table.kmap th { color: var(--copper); font-weight: 600; font-size: 13.5px; padding: 2px 6px; }
+table.kmap th.corner { position: relative; width: 46px; height: 34px; font-size: 12px; }
+table.kmap th.corner .rv { position: absolute; left: 2px; bottom: 1px; }
+table.kmap th.corner .cv { position: absolute; right: 2px; top: 1px; }
+table.kmap th.corner::after { content: ''; position: absolute; left: 4px; top: 4px; right: 4px; bottom: 4px; background: linear-gradient(to top right, transparent 48%, var(--trace) 50%, transparent 52%); }
+table.kmap td { position: relative; width: 48px; height: 44px; text-align: center; background: #062a1a; border: 1px solid var(--trace); border-radius: 6px; font-size: 19px; }
+table.kmap td b { font-weight: 700; }
+table.kmap td.v1 b { color: var(--led); text-shadow: 0 0 6px rgba(61, 255, 142, .5); }
+table.kmap td.vx b { color: var(--amber); }
+table.kmap td.v0 b { color: var(--dim); }
+table.kmap td i { position: absolute; right: 3px; bottom: 1px; font-size: 10px; font-style: normal; color: var(--dim); opacity: .7; }
+table.kmap.edit td { cursor: pointer; }
+@media (hover: hover) { table.kmap.edit td:hover { border-color: var(--copper); } }
+table.tt td.o1 { color: var(--led); font-weight: 700; }
+table.tt td.ox { color: var(--amber); }
+table.tt td.ed { cursor: pointer; min-width: 34px; background: #0b3524; }
+table.tt td.ed.empty { color: var(--dim); }
+table.tt th.edcol { color: var(--amber); }
+.exprprev { font-size: 14px; min-height: 20px; margin: -4px 0 4px; }
+.qm { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.qm table.t { margin: 4px 0; }
+.lesson table.t { max-width: 100%; }

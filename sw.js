@@ -1,10 +1,10 @@
 /* SİNYAL — çevrimdışı önbellek.
    Önce önbellekten açılır (metroda internet yokken de çalışır), arka planda
    güncel sürüm indirilir; değişiklikler bir sonraki açılışta görünür. */
-const CACHE = 'sinyal-v2';
+const CACHE = 'sinyal-v3';
 const FILES = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
-  './js/core.js', './js/r1.js', './js/app.js', './js/touch.js',
+  './js/core.js', './js/bool.js', './js/r1.js', './js/r2.js', './js/r3.js', './js/r4.js', './js/app.js', './js/touch.js',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
 ];
 
