@@ -174,7 +174,7 @@ const Touch = (() => {
 
   /* ---------- Kaldığın yerden devam + ana ekran ipucu ---------- */
   const LAST = 'sinyal_last_view';
-  const RESUME = ['station', 'review', 'mistakes', 'drill'];
+  const RESUME = ['station', 'review', 'mistakes', 'drill', 'pick', 'free'];
   const go0 = App.go.bind(App);
   App.go = (view, params = {}) => {
     go0(view, params);
@@ -193,7 +193,8 @@ const Touch = (() => {
   try {
     const last = JSON.parse(localStorage.getItem(LAST));
     const valid = last && RESUME.includes(last.view) && Date.now() - last.t < 12 * 3600e3 &&
-      (last.view !== 'station' || Registry.stations[last.params.id]) && (last.view !== 'drill' || Registry.skills[last.params.skill]);
+      (last.view !== 'station' || Registry.stations[last.params.id]) && (last.view !== 'drill' || Registry.skills[last.params.skill]) &&
+      (last.view !== 'free' || (last.params.skills || []).some(id => Registry.skills[id]));
     if (valid && !$('.modal-bg')) App.go(last.view, last.params); else tip();
   } catch (e) { tip(); }
 

@@ -134,6 +134,7 @@ Views.map = m => {
       </div>
       <div class="spacer"></div>
       <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn big gopick">🎯 Soru seç: istediğin konudan çöz</button>
         ${due ? `<button class="btn big goreview">↺ Tekrarları çöz (${due})</button>` : ''}
         ${nx ? `<button class="btn primary big gonext">▶ Sıradaki: ${esc(nx.label)}</button>` : '<span class="silk">Tüm bölgeler tamam! 🎉</span>'}
       </div>
@@ -144,7 +145,7 @@ Views.map = m => {
     const open = regionOpen(r), allDone = r.stations.every(st => s.done[st.id]);
     const c = document.createElement('div'); c.className = 'chip';
     c.innerHTML = `<div class="notch"></div><div class="ref">${r.chip} · ${r.lec}</div><h3>${r.name}</h3>
-      <ul class="stations">${r.stations.map(st => `<li class="st ${stationStatus(st)}" data-id="${st.id}"><span class="via"></span><span class="name">${st.title}</span>${masteryHTML(mastery(st))}</li>`).join('')}
+      <ul class="stations">${r.stations.map(st => `<li class="st ${stationStatus(st)}" data-id="${st.id}"><span class="via"></span><span class="name">${st.title}</span>${masteryHTML(mastery(st))}<button class="qp" data-q="${st.id}" title="Bu istasyonun sorularını hemen çöz (kilit yok)">🎯</button></li>`).join('')}
       <li class="st boss ${s.boss[r.id] ? 'done' : allDone ? 'open' : 'locked'}" data-boss="${r.id}"><span class="via"></span><span class="name">⚡ Boss: ${r.chip} Final Testi</span>${s.boss[r.id] ? '🏅' : ''}</li></ul>`;
     if (!open) c.style.opacity = .6;
     R.appendChild(c);
@@ -156,16 +157,18 @@ Views.map = m => {
       <div class="silk" style="text-align:center">yapım aşamasında</div>`;
     R.appendChild(c);
   });
+  $$('.qp', m).forEach(b => b.onclick = e => { e.stopPropagation(); App.go('free', { skills: Registry.stations[b.dataset.q].skills.map(k => k.id) }); });
   $$('.st[data-id]', m).forEach(li => li.onclick = () => {
     const st = Registry.stations[li.dataset.id];
     if (stationStatus(st) === 'locked') {
       UI.modal(`<h3>🔒 Kilitli istasyon</h3><p>Önceki istasyonu bitirmeden geliyorsun. Konular üst üste kurulduğu için sırayla gitmen önerilir.</p>`,
-        [{ label: 'Vazgeç' }, { label: 'Yine de gir', primary: true, onClick: () => App.go('station', { id: st.id }) }]);
+        [{ label: 'Vazgeç' }, { label: '🎯 Sadece soruları çöz', onClick: () => App.go('free', { skills: st.skills.map(k => k.id) }) }, { label: 'Yine de gir', primary: true, onClick: () => App.go('station', { id: st.id }) }]);
     } else App.go('station', { id: st.id });
   });
   $$('.st[data-boss]', m).forEach(li => li.onclick = () => App.go('boss', { rid: li.dataset.boss }));
   if (nx) $('.gonext', m).onclick = nx.go;
   if (due) $('.goreview', m).onclick = () => App.go('review');
+  $('.gopick', m).onclick = () => App.go('pick');
 };
 
 Views.station = (m, { id, tab }) => {
@@ -327,6 +330,74 @@ Views.boss = (m, { rid }) => {
   };
 };
 
+/* ---------- Soru Seç: istediğin istasyon/beceriden, kilitsiz, istediğin kadar ---------- */
+Views.pick = m => {
+  const sel = new Set((Store.s.pick || []).filter(id => Registry.skills[id]));
+  m.innerHTML = `<div class="crumbs"><button class="btn ghost sm back">← Harita</button><span class="silk">🎯 Soru Seç</span></div>
+    <div class="panel"><h2>🎯 Soru Seç</h2>
+      <p class="dim">Hangi konudan soru çözmek istiyorsan işaretle. Kilit yok, sıra yok, hedef yok: istediğin kadar çöz, istediğin an bitir. Doğru/yanlışların yine tekrar kartlarına ve hata defterine işlenir. İstasyon adına tıklarsan içindeki tek tek becerileri seçebilirsin.</p>
+      <div class="row"><button class="btn sm all">Tümünü seç</button><button class="btn sm none">Temizle</button><button class="btn sm weak" title="Tekrar kutusu 0–2 olan beceriler">Zayıf olduklarım</button><button class="btn sm wrong" title="Hata defterinde kaydı olan beceriler">Hata defterimdekiler</button></div>
+      <div class="picklist"></div>
+      <div class="row pickbar"><span class="pcount mono"></span><div class="spacer"></div><button class="btn primary big go">▶ Başla</button></div></div>`;
+  $('.back', m).onclick = () => App.go('map');
+  $('.picklist', m).innerHTML = Registry.regions.map(r => `<div class="pk-region"><div class="silk">${r.chip} · ${r.name} · ${r.lec}</div>
+    ${r.stations.map(st => `<details class="pk-st"><summary><label><input type="checkbox" class="stbox" data-st="${st.id}"> <b>${st.title}</b></label> <span class="dim pkn" data-n="${st.id}"></span>${masteryHTML(mastery(st))}</summary>
+      <div class="pk-skills">${st.skills.map(sk => `<label class="skill-li"><input type="checkbox" class="skbox" data-sk="${sk.id}"> <span class="nm">${sk.name}</span>${boxHTML(sk.id)}</label>`).join('')}</div></details>`).join('')}</div>`).join('');
+  // istasyon kutusuna tıklamak <details>'i açıp kapatmasın
+  $$('.pk-st summary label', m).forEach(l => l.onclick = e => e.stopPropagation());
+  const sync = () => {
+    $$('.skbox', m).forEach(b => b.checked = sel.has(b.dataset.sk));
+    Registry.regions.forEach(r => r.stations.forEach(st => {
+      const n = st.skills.filter(k => sel.has(k.id)).length, b = $(`.stbox[data-st="${st.id}"]`, m);
+      b.checked = n === st.skills.length; b.indeterminate = n > 0 && n < st.skills.length;
+      $(`.pkn[data-n="${st.id}"]`, m).textContent = n ? `${n}/${st.skills.length} seçili` : `${st.skills.length} beceri`;
+    }));
+    $('.pcount', m).textContent = `${sel.size} beceri seçili`;
+    $('.go', m).disabled = !sel.size;
+  };
+  $$('.skbox', m).forEach(b => b.onchange = () => { b.checked ? sel.add(b.dataset.sk) : sel.delete(b.dataset.sk); sync(); });
+  $$('.stbox', m).forEach(b => b.onchange = () => { Registry.stations[b.dataset.st].skills.forEach(k => b.checked ? sel.add(k.id) : sel.delete(k.id)); sync(); });
+  const setTo = ids => { sel.clear(); ids.forEach(id => sel.add(id)); sync(); };
+  const allIds = Object.keys(Registry.skills);
+  $('.all', m).onclick = () => setTo(allIds);
+  $('.none', m).onclick = () => setTo([]);
+  $('.weak', m).onclick = () => { const w = allIds.filter(id => Leitner.box(id) <= 2); w.length ? setTo(w) : UI.toast('Zayıf beceri yok 🎉'); };
+  $('.wrong', m).onclick = () => { const w = [...new Set(Store.s.mistakes.map(x => x.skill))].filter(id => Registry.skills[id]); w.length ? setTo(w) : UI.toast('Hata defterin boş 🎉'); };
+  $('.go', m).onclick = () => { Store.s.pick = [...sel]; Store.save(); App.go('free', { skills: [...sel] }); };
+  sync();
+};
+
+/* Serbest pratik: hedef yok, kilit yok; yanlışlar 3 soru sonra geri gelir */
+Views.free = (m, { skills }) => {
+  const ids = (skills || []).filter(id => Registry.skills[id]);
+  if (!ids.length) return Views.pick(m);
+  const sched = makeScheduler(ids, false);
+  const sts = [...new Set(ids.map(id => Registry.skills[id].station.title))];
+  let okc = 0, n = 0;
+  m.innerHTML = `<div class="crumbs"><button class="btn ghost sm back">← Soru Seç</button><span class="silk">🎯 Serbest pratik · ${esc(sts.length > 2 ? `${sts.length} istasyon` : sts.join(', '))} · ${ids.length} beceri</span></div>
+    <div class="panel"><div class="ptitle"><span>İstediğin kadar çöz</span><span><span class="pc mono"></span><button class="btn sm fin">■ Bitir</button></span></div><div class="tasks"></div></div>`;
+  $('.back', m).onclick = () => App.go('pick');
+  const paint = () => { $('.pc', m).textContent = n ? `${okc}/${n} doğru · %${Math.round(100 * okc / n)}` : ''; };
+  $('.fin', m).onclick = () => {
+    App.enter = null;
+    $('.fin', m).disabled = true;
+    $('.tasks', m).innerHTML = `<h3>Oturum bitti</h3><p>${n ? `<b>${okc}/${n}</b> doğru.` : 'Hiç soru çözmedin.'} ${n > okc ? 'Yanlışların hata defterine yazıldı.' : ''}</p>
+      <div class="row"><button class="btn primary again">▶ Aynı konulardan devam</button><button class="btn pk">🎯 Başka konu seç</button><button class="btn hm">← Harita</button></div>`;
+    $('.again', m).onclick = () => App.go('free', { skills: ids });
+    $('.pk', m).onclick = () => App.go('pick');
+    $('.hm', m).onclick = () => App.go('map');
+  };
+  const next = () => {
+    paint();
+    const { skill } = sched.next(), sk = Registry.skills[skill];
+    runTask($('.tasks', m), Registry.gen(skill), {
+      tag: `<span class="tag review">🎯 ${esc(sk.station.title)} · ${esc(sk.name)}</span>`,
+      onNext: ok => { sched.result(skill, ok); if (ok !== null) { n++; if (ok) okc++; } next(); },
+    });
+  };
+  next();
+};
+
 Views.mistakes = m => {
   const L = Store.s.mistakes;
   const cnt = {};
@@ -394,6 +465,7 @@ function drawTraces() {
   $('#brand').onclick = () => App.go('map');
   $('#bReview').onclick = () => App.go('review');
   $('#bMist').onclick = () => App.go('mistakes');
+  $('#bPick').onclick = () => App.go('pick');
   $('#bSound').onclick = () => { Store.s.sound = !Store.s.sound; Store.save(); App.refreshHeader(); };
   $('#bReset').onclick = () => UI.modal('<h3>İlerlemeyi sıfırla?</h3><p>Tüm XP, tamamlanan istasyonlar, tekrar kartları ve hata defteri silinir.</p>',
     [{ label: 'Vazgeç' }, { label: 'Sıfırla', primary: true, onClick: () => { Store.reset(); App.go('map'); } }]);
@@ -408,6 +480,7 @@ function drawTraces() {
       <p>EEF205E slaytlarından yapılmış bir çalışma oyunu. Haritadaki her <b>çip</b> bir derse, içindeki her <b>istasyon</b> bir konuya karşılık geliyor.</p>
       <ul><li>📘 <b>Ders:</b> Konu interaktif demolarla anlatılır. LED'lere tıkla, sürgüleri kaydır, adım adım ilerle.</li>
       <li>🎯 <b>Pratik:</b> Rastgele üretilen sorular gelir. Cevabı her seferinde sen üretirsin, yanlışta <b>nedeni</b> gösterilir.</li>
+      <li>🎯 <b>Soru Seç:</b> İstediğin konudan, kilit ve sıra olmadan, istediğin kadar soru çöz.</li>
       <li>↺ <b>Tekrar:</b> Yanlış yaptığın soru tipleri aralıklı tekrar sistemiyle geri gelir.</li>
       <li>📕 <b>Hata Defteri:</b> Bütün yanlışların, nedenleri ve slayt numaralarıyla birlikte burada durur.</li>
       <li>⚡ <b>Boss:</b> Her çipin sonunda karışık sorulardan oluşan bir final testi var.</li></ul>

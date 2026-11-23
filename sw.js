@@ -1,7 +1,7 @@
 /* SİNYAL — çevrimdışı önbellek.
    Önce önbellekten açılır (metroda internet yokken de çalışır), arka planda
    güncel sürüm indirilir; değişiklikler bir sonraki açılışta görünür. */
-const CACHE = 'sinyal-v1';
+const CACHE = 'sinyal-v2';
 const FILES = [
   './', './index.html', './css/style.css', './manifest.webmanifest',
   './js/core.js', './js/r1.js', './js/app.js', './js/touch.js',
